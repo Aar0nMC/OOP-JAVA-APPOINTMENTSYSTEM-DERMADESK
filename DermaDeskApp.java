@@ -1,11 +1,11 @@
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
 public class DermaDeskApp extends JFrame {
     private final Color NAVY = new Color(35, 48, 68);
@@ -19,7 +19,10 @@ public class DermaDeskApp extends JFrame {
     private JComboBox<String> serviceCombo;
     private DefaultTableModel customerModel, staffModel, serviceModel;
     private JTable customerTable, staffTable, serviceTable;
+    private static final String STAFF_PASSWORD = "DermaDesk12";
+    private boolean staffAuthenticated = false;
 
+    // ==================== PROGRAM SETUP ====================
     public DermaDeskApp() {
         setTitle("DermaDesk | Dermatology Clinic Appointment System");
         setSize(1000, 650);
@@ -34,6 +37,7 @@ public class DermaDeskApp extends JFrame {
         cardLayout.show(mainPanel, "welcome");
     }
 
+    // ==================== PROGRAM LOGIC: LOAD SAMPLE SERVICES ====================
     private void loadSampleServices() {
         services.add(new Service("Basic Facial", "Basic skin cleansing and care", 500, 45, true));
         services.add(new Service("Acne Treatment", "Basic acne care session", 800, 60, true));
@@ -41,6 +45,7 @@ public class DermaDeskApp extends JFrame {
         services.add(new Service("Skin Consultation", "Initial skin consultation", 300, 30, true));
     }
 
+    // ==================== USER INTERFACE (UI): WELCOME SCREEN ====================
     private JPanel createWelcomePanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(new Color(242, 247, 247));
@@ -49,6 +54,7 @@ public class DermaDeskApp extends JFrame {
         content.setBorder(BorderFactory.createEmptyBorder(35, 55, 35, 55));
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 
+        // UI: WELCOME SCREEN TITLE AND DESCRIPTION
         JLabel title = new JLabel("DermaDesk");
         title.setFont(new Font("SansSerif", Font.BOLD, 38));
         title.setForeground(NAVY);
@@ -57,10 +63,12 @@ public class DermaDeskApp extends JFrame {
         subtitle.setFont(new Font("SansSerif", Font.PLAIN, 15));
         subtitle.setForeground(Color.DARK_GRAY);
         subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // UI: NAVIGATION BUTTONS
         JButton customerButton = makeButton("Continue as Customer");
         JButton staffButton = makeButton("Continue as Clinic Staff");
         customerButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         staffButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // PROGRAM LOGIC: CUSTOMER AND STAFF NAVIGATION ACTIONS
         customerButton.addActionListener(e -> {
             refreshServiceChoices();
             cardLayout.show(mainPanel, "customer");
@@ -87,6 +95,7 @@ public class DermaDeskApp extends JFrame {
         return panel;
     }
 
+    // ==================== USER INTERFACE (UI): CUSTOMER SCREEN ====================
     private JPanel createCustomerPanel() {
         JPanel panel = new JPanel(new BorderLayout(12, 12));
         panel.setBorder(BorderFactory.createEmptyBorder(18, 22, 18, 22));
@@ -95,6 +104,7 @@ public class DermaDeskApp extends JFrame {
 
         JPanel center = new JPanel(new BorderLayout(10, 10));
         center.setOpaque(false);
+        // UI: APPOINTMENT BOOKING FORM
         JPanel form = new JPanel(new GridBagLayout());
         form.setBackground(Color.WHITE);
         form.setBorder(BorderFactory.createTitledBorder("Book an Appointment"));
@@ -115,6 +125,7 @@ public class DermaDeskApp extends JFrame {
         form.add(bookButton, g);
         bookButton.addActionListener(e -> bookAppointment());
 
+        // UI: CUSTOMER APPOINTMENT TABLE
         customerModel = new DefaultTableModel(new String[]{"ID", "Service", "Date", "Time", "Duration", "Status"}, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -128,6 +139,7 @@ public class DermaDeskApp extends JFrame {
         center.add(tablePanel, BorderLayout.CENTER);
         panel.add(center, BorderLayout.CENTER);
 
+        // UI: CUSTOMER SCREEN ACTION BUTTONS
         JButton refresh = makeButton("Refresh My Bookings");
         JButton back = makeButton("Back to Home");
         refresh.addActionListener(e -> refreshCustomerTable());
@@ -139,12 +151,14 @@ public class DermaDeskApp extends JFrame {
         return panel;
     }
 
+    // ==================== USER INTERFACE (UI): STAFF DASHBOARD ====================
     private JPanel createStaffPanel() {
         JPanel panel = new JPanel(new BorderLayout(12, 12));
         panel.setBorder(BorderFactory.createEmptyBorder(18, 22, 18, 22));
         panel.setBackground(new Color(247, 249, 249));
         panel.add(header("Clinic Staff Dashboard", "Review bookings and maintain the service list"), BorderLayout.NORTH);
 
+        // UI: STAFF APPOINTMENT TABLE
         staffModel = new DefaultTableModel(new String[]{"ID", "Customer", "Service", "Date", "Time", "Duration", "Status"}, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -155,6 +169,7 @@ public class DermaDeskApp extends JFrame {
         bookingPanel.setBorder(BorderFactory.createTitledBorder("Appointment Requests"));
         bookingPanel.add(new JScrollPane(staffTable), BorderLayout.CENTER);
 
+        // UI: APPOINTMENT MANAGEMENT BUTTONS
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT));
         actions.setBackground(Color.WHITE);
         JButton confirm = makeButton("Confirm");
@@ -170,6 +185,7 @@ public class DermaDeskApp extends JFrame {
         refresh.addActionListener(e -> refreshStaffTable());
         bookingPanel.add(actions, BorderLayout.SOUTH);
 
+        // UI: SERVICE CATALOG TABLE
         serviceModel = new DefaultTableModel(new String[]{"Service", "Description", "Price (PHP)", "Duration (min)", "Available"}, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -179,6 +195,7 @@ public class DermaDeskApp extends JFrame {
         servicePanel.setBackground(Color.WHITE);
         servicePanel.setBorder(BorderFactory.createTitledBorder("Service Catalog"));
         servicePanel.add(new JScrollPane(serviceTable), BorderLayout.CENTER);
+        // UI: SERVICE MANAGEMENT BUTTONS
         JButton addService = makeButton("Add Service");
         JButton toggleService = makeButton("Change Availability");
         JPanel serviceActions = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -193,12 +210,55 @@ public class DermaDeskApp extends JFrame {
         panel.add(split, BorderLayout.CENTER);
         JButton back = makeButton("Back to Home");
         back.addActionListener(e -> cardLayout.show(mainPanel, "welcome"));
+        back.addActionListener(e -> staffAuthenticated = false);
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         bottom.setOpaque(false); bottom.add(back);
         panel.add(bottom, BorderLayout.SOUTH);
+        // PROGRAM LOGIC: REQUIRE STAFF LOGIN WHEN DASHBOARD IS SHOWN
+        panel.addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                if (!staffAuthenticated) {
+                    if (!showStaffLogin()) {
+                        cardLayout.show(mainPanel, "welcome");
+                    }
+                }
+            }
+        });
         return panel;
     }
 
+    // ==================== UI AND PROGRAM LOGIC: STAFF PASSWORD LOGIN ====================
+    private boolean showStaffLogin() {
+        // UI: PASSWORD INPUT FIELD AND LOGIN DIALOG
+        JPasswordField passwordField = new JPasswordField(15);
+        int option = JOptionPane.showConfirmDialog(
+                this,
+                passwordField,
+                "Clinic Staff Login",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+        );
+
+        // PROGRAM LOGIC: CHECK ENTERED STAFF PASSWORD
+        if (option == JOptionPane.OK_OPTION) {
+            String enteredPassword = new String(passwordField.getPassword());
+            if (enteredPassword.equals(STAFF_PASSWORD)) {
+                staffAuthenticated = true;
+                return true;
+            }
+        }
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Incorrect password. Access denied.",
+                "Login Failed",
+                JOptionPane.WARNING_MESSAGE
+        );
+        return false;
+    }
+
+    // ==================== USER INTERFACE (UI): REUSABLE HEADER ====================
     private JPanel header(String titleText, String subtitleText) {
         JPanel p = new JPanel(new BorderLayout());
         p.setOpaque(false);
@@ -213,6 +273,7 @@ public class DermaDeskApp extends JFrame {
         return p;
     }
 
+    // ==================== USER INTERFACE (UI): FORM ROW HELPER ====================
     private void addFormRow(JPanel panel, GridBagConstraints g, int row, String label, Component field) {
         g.gridy = row; g.gridx = 0; g.weightx = 0;
         panel.add(new JLabel(label), g);
@@ -220,6 +281,7 @@ public class DermaDeskApp extends JFrame {
         panel.add(field, g);
     }
 
+    // ==================== USER INTERFACE (UI): BUTTON STYLE HELPER ====================
     private JButton makeButton(String text) {
         JButton b = new JButton(text);
         b.setFocusPainted(false);
@@ -230,6 +292,7 @@ public class DermaDeskApp extends JFrame {
         return b;
     }
 
+    // ==================== USER INTERFACE (UI): TABLE STYLE HELPER ====================
     private void styleTable(JTable table) {
         table.setRowHeight(25);
         table.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 12));
@@ -237,17 +300,21 @@ public class DermaDeskApp extends JFrame {
         table.setFillsViewportHeight(true);
     }
 
+    // ==================== PROGRAM LOGIC: REFRESH AVAILABLE SERVICE OPTIONS ====================
     private void refreshServiceChoices() {
         serviceCombo.removeAllItems();
         for (Service s : services) if (s.isAvailable()) serviceCombo.addItem(s.getName());
     }
 
+    // ==================== PROGRAM LOGIC: BOOK APPOINTMENT ====================
     private void bookAppointment() {
         try {
+            // PROGRAM LOGIC: READ AND VALIDATE CUSTOMER DETAILS
             String customer = customerNameField.getText().trim();
             if (customer.isEmpty()) throw new IllegalArgumentException("Please enter your name.");
             String serviceName = (String) serviceCombo.getSelectedItem();
             if (serviceName == null) throw new IllegalArgumentException("There are no available services.");
+            // PROGRAM LOGIC: VALIDATE DATE AND TIME INPUTS
             LocalDate date = LocalDate.parse(dateField.getText().trim(), DateTimeFormatter.ISO_LOCAL_DATE);
             LocalTime time = LocalTime.parse(timeField.getText().trim(), DateTimeFormatter.ofPattern("HH:mm"));
             if (date.isBefore(LocalDate.now())) throw new IllegalArgumentException("Please choose today or a future date.");
@@ -255,6 +322,7 @@ public class DermaDeskApp extends JFrame {
             LocalDateTime start = LocalDateTime.of(date, time);
             LocalDateTime end = start.plusMinutes(service.getDuration());
             if (hasConflict(start, end, null)) throw new IllegalArgumentException("That schedule is already occupied. Please choose another time.");
+            // PROGRAM LOGIC: CREATE AND SAVE APPOINTMENT
             Appointment a = new Appointment(appointments.size() + 1, customer, service, date, time, "Pending");
             appointments.add(a);
             JOptionPane.showMessageDialog(this, "Appointment request submitted!\nBooking ID: " + a.getId() + "\nStatus: Pending");
@@ -267,6 +335,7 @@ public class DermaDeskApp extends JFrame {
         }
     }
 
+    // ==================== PROGRAM LOGIC: CHECK APPOINTMENT SCHEDULE CONFLICTS ====================
     private boolean hasConflict(LocalDateTime newStart, LocalDateTime newEnd, Appointment ignore) {
         for (Appointment a : appointments) {
             if (a == ignore || !isActive(a.getStatus())) continue;
@@ -277,10 +346,12 @@ public class DermaDeskApp extends JFrame {
         return false;
     }
 
+    // ==================== PROGRAM LOGIC: CHECK ACTIVE APPOINTMENT STATUS ====================
     private boolean isActive(String status) {
         return status.equals("Pending") || status.equals("Confirmed") || status.equals("Rescheduled");
     }
 
+    // ==================== PROGRAM LOGIC: REFRESH CUSTOMER APPOINTMENT TABLE ====================
     private void refreshCustomerTable() {
         if (customerModel == null) return;
         customerModel.setRowCount(0);
@@ -292,6 +363,7 @@ public class DermaDeskApp extends JFrame {
         }
     }
 
+    // ==================== PROGRAM LOGIC: REFRESH STAFF APPOINTMENT TABLE ====================
     private void refreshStaffTable() {
         if (staffModel == null) return;
         staffModel.setRowCount(0);
@@ -300,12 +372,14 @@ public class DermaDeskApp extends JFrame {
         }
     }
 
+    // ==================== PROGRAM LOGIC: REFRESH SERVICE TABLE ====================
     private void refreshServiceTable() {
         if (serviceModel == null) return;
         serviceModel.setRowCount(0);
         for (Service s : services) serviceModel.addRow(new Object[]{s.getName(), s.getDescription(), String.format("₱%.2f", s.getPrice()), s.getDuration(), s.isAvailable() ? "Yes" : "No"});
     }
 
+    // ==================== PROGRAM LOGIC: FIND SELECTED APPOINTMENT ====================
     private Appointment getSelectedAppointment() {
         int row = staffTable.getSelectedRow();
         if (row < 0) { showError("Please select an appointment first."); return null; }
@@ -314,6 +388,7 @@ public class DermaDeskApp extends JFrame {
         return null;
     }
 
+    // ==================== PROGRAM LOGIC: UPDATE APPOINTMENT STATUS ====================
     private void updateSelectedStatus(String status) {
         Appointment a = getSelectedAppointment();
         if (a == null) return;
@@ -322,21 +397,26 @@ public class DermaDeskApp extends JFrame {
         refreshCustomerTable();
     }
 
+    // ==================== UI AND PROGRAM LOGIC: RESCHEDULE APPOINTMENT ====================
     private void rescheduleSelected() {
         Appointment a = getSelectedAppointment();
         if (a == null) return;
+        // UI: RESCHEDULE DATE AND TIME INPUT FIELDS
         JTextField date = new JTextField(a.getDate().toString());
         JTextField time = new JTextField(a.getTime().format(DateTimeFormatter.ofPattern("HH:mm")));
         JPanel p = new JPanel(new GridLayout(2, 2, 6, 6));
         p.add(new JLabel("New date (YYYY-MM-DD):")); p.add(date);
         p.add(new JLabel("New time (HH:mm):")); p.add(time);
+        // UI: CONFIRM RESCHEDULING REQUEST
         if (JOptionPane.showConfirmDialog(this, p, "Reschedule Appointment", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) return;
         try {
+            // PROGRAM LOGIC: VALIDATE NEW DATE AND TIME AND CHECK CONFLICTS
             LocalDate newDate = LocalDate.parse(date.getText().trim());
             LocalTime newTime = LocalTime.parse(time.getText().trim(), DateTimeFormatter.ofPattern("HH:mm"));
             if (newDate.isBefore(LocalDate.now())) throw new IllegalArgumentException("Please choose today or a future date.");
             LocalDateTime start = LocalDateTime.of(newDate, newTime);
             if (hasConflict(start, start.plusMinutes(a.getService().getDuration()), a)) throw new IllegalArgumentException("That schedule conflicts with another active appointment.");
+            // PROGRAM LOGIC: SAVE THE NEW APPOINTMENT SCHEDULE
             a.setDate(newDate); a.setTime(newTime); a.setStatus("Rescheduled");
             refreshStaffTable(); refreshCustomerTable();
             JOptionPane.showMessageDialog(this, "Appointment rescheduled successfully.");
@@ -345,7 +425,9 @@ public class DermaDeskApp extends JFrame {
         } catch (IllegalArgumentException ex) { showError(ex.getMessage()); }
     }
 
+    // ==================== UI AND PROGRAM LOGIC: ADD A SERVICE ====================
     private void addService() {
+        // UI: SERVICE INFORMATION INPUT FIELDS
         JTextField name = new JTextField();
         JTextField description = new JTextField();
         JTextField price = new JTextField();
@@ -355,20 +437,24 @@ public class DermaDeskApp extends JFrame {
         p.add(new JLabel("Description:")); p.add(description);
         p.add(new JLabel("Price (PHP):")); p.add(price);
         p.add(new JLabel("Duration (minutes):")); p.add(duration);
+        // UI: CONFIRM ADDING THE SERVICE
         if (JOptionPane.showConfirmDialog(this, p, "Add Service", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) return;
         try {
+            // PROGRAM LOGIC: VALIDATE SERVICE DETAILS
             String n = name.getText().trim();
             if (n.isEmpty() || description.getText().trim().isEmpty()) throw new IllegalArgumentException("Complete all service details.");
             double cost = Double.parseDouble(price.getText().trim());
             int mins = Integer.parseInt(duration.getText().trim());
             if (cost < 0 || mins <= 0) throw new IllegalArgumentException("Price must be 0 or higher and duration must be positive.");
             if (findServiceOrNull(n) != null) throw new IllegalArgumentException("That service already exists.");
+            // PROGRAM LOGIC: ADD SERVICE TO THE SERVICE LIST
             services.add(new Service(n, description.getText().trim(), cost, mins, true));
             refreshServiceTable(); refreshServiceChoices();
         } catch (NumberFormatException ex) { showError("Enter a valid number for price and duration."); }
         catch (IllegalArgumentException ex) { showError(ex.getMessage()); }
     }
 
+    // ==================== PROGRAM LOGIC: CHANGE SERVICE AVAILABILITY ====================
     private void toggleSelectedService() {
         int row = serviceTable.getSelectedRow();
         if (row < 0) { showError("Please select a service first."); return; }
@@ -378,30 +464,36 @@ public class DermaDeskApp extends JFrame {
         refreshServiceTable(); refreshServiceChoices();
     }
 
+    // ==================== PROGRAM LOGIC: FIND SERVICE ====================
     private Service findService(String name) {
         Service s = findServiceOrNull(name);
         if (s == null) throw new IllegalArgumentException("Selected service was not found.");
         return s;
     }
 
+    // ==================== PROGRAM LOGIC: SEARCH SERVICE BY NAME ====================
     private Service findServiceOrNull(String name) {
         for (Service s : services) if (s.getName().equalsIgnoreCase(name)) return s;
         return null;
     }
 
+    // ==================== USER INTERFACE (UI): DISPLAY ERROR MESSAGE ====================
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message, "DermaDesk", JOptionPane.WARNING_MESSAGE);
     }
 
+    // ==================== PROGRAM ENTRY POINT ====================
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new DermaDeskApp().setVisible(true));
     }
 
+    // ==================== PROGRAM LOGIC: SERVICE DATA CLASS ====================
     private static class Service {
         private final String name, description;
         private final double price;
         private final int duration;
         private boolean available;
+        // PROGRAM LOGIC: SERVICE CONSTRUCTOR
         Service(String name, String description, double price, int duration, boolean available) {
             this.name = name; this.description = description; this.price = price; this.duration = duration; this.available = available;
         }
@@ -413,6 +505,7 @@ public class DermaDeskApp extends JFrame {
         void setAvailable(boolean available) { this.available = available; }
     }
 
+    // ==================== PROGRAM LOGIC: APPOINTMENT DATA CLASS ====================
     private static class Appointment {
         private final int id;
         private final String customer;
@@ -420,6 +513,7 @@ public class DermaDeskApp extends JFrame {
         private LocalDate date;
         private LocalTime time;
         private String status;
+        // PROGRAM LOGIC: APPOINTMENT CONSTRUCTOR
         Appointment(int id, String customer, Service service, LocalDate date, LocalTime time, String status) {
             this.id = id; this.customer = customer; this.service = service; this.date = date; this.time = time; this.status = status;
         }
